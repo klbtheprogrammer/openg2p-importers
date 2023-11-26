@@ -1,27 +1,29 @@
-from odoo import models, fields
-from .odk_client import ODKClient
+import logging
 from datetime import datetime, timedelta
 
-import logging
+from odoo import fields, models
 
-import requests
+from .odk_client import ODKClient
 
 _logger = logging.getLogger(__name__)
 
-class OdkConfig(models.Model):
-    _name = 'odk.config'
-    _description = 'ODK Configuration'
 
-    name = fields.Char(string='Name', required=True)
-    base_url = fields.Char(string='Base URL', required=True)
-    username = fields.Char(string='Username', required=True)
-    password = fields.Char(string='Password', required=True)
-    project = fields.Char(string='Project', required=False)
-    form_id = fields.Char(string='Form ID', required=False)
-    json_formatter = fields.Text(string='JSON Formatter', required=False)
-    target_registry = fields.Selection([("individual","Individual"),("group","Group")])
-    last_sync_time = fields.Datetime(string='Last synced on', required=False)
-    cron_id = fields.Many2one("ir.cron",string="Cron Job",required=False)
+class OdkConfig(models.Model):
+    _name = "odk.config"
+    _description = "ODK Configuration"
+
+    name = fields.Char(string="Name", required=True)
+    base_url = fields.Char(string="Base URL", required=True)
+    username = fields.Char(string="Username", required=True)
+    password = fields.Char(string="Password", required=True)
+    project = fields.Char(string="Project", required=False)
+    form_id = fields.Char(string="Form ID", required=False)
+    json_formatter = fields.Text(string="JSON Formatter", required=False)
+    target_registry = fields.Selection(
+        [("individual", "Individual"), ("group", "Group")]
+    )
+    last_sync_time = fields.Datetime(string="Last synced on", required=False)
+    cron_id = fields.Many2one("ir.cron", string="Cron Job", required=False)
     job_status = fields.Selection(
         [
             ("draft", "Draft"),
@@ -40,30 +42,50 @@ class OdkConfig(models.Model):
 
     def test_connection(self):
         for config in self:
-            client = ODKClient(self.env, config.base_url, config.username, config.password)
+            client = ODKClient(
+                self.env, config.base_url, config.username, config.password
+            )
             client.login()
             client.test_connection()
-    
+
     def import_records(self):
         for config in self:
-            client = ODKClient(self.env, config.base_url, config.username, config.password, config.project, config.form_id, config.target_registry, config.json_formatter)
+            client = ODKClient(
+                self.env,
+                config.base_url,
+                config.username,
+                config.password,
+                config.project,
+                config.form_id,
+                config.target_registry,
+                config.json_formatter,
+            )
             client.login()
             # try:
             client.import_delta_records(last_sync_timestamp=config.last_sync_time)
-            config.update({'last_sync_time':fields.Datetime.now()})
-    
+            config.update({"last_sync_time": fields.Datetime.now()})
+
     def import_records_by_id(self, id):
-        
-        print("ID:",id)
+
+        print("ID:", id)
         config = self.env["odk.config"].browse(id)
-        client = ODKClient(self.env, config.base_url, config.username, config.password, config.project, config.form_id, config.target_registry, config.json_formatter)
+        client = ODKClient(
+            self.env,
+            config.base_url,
+            config.username,
+            config.password,
+            config.project,
+            config.form_id,
+            config.target_registry,
+            config.json_formatter,
+        )
         client.login()
         # try:
         client.import_delta_records(last_sync_timestamp=config.last_sync_time)
-        config.update({'last_sync_time':fields.Datetime.now()})
-    
-            # except ex:
-            #     print("Error",ex)
+        config.update({"last_sync_time": fields.Datetime.now()})
+
+        # except ex:
+        #     print("Error",ex)
 
     def odk_import_action_trigger(self):
         for rec in self:
@@ -95,7 +117,7 @@ class OdkConfig(models.Model):
                         "end_datetime": now_datetime,
                     }
                 )
-                
+
             elif rec.job_status == "started" or rec.job_status == "running":
                 _logger.info("Job Stopped")
                 rec.job_status = "completed"

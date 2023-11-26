@@ -1,10 +1,22 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8" ?>
 <odoo>
     <data>
-        <menuitem id="odk_menu_root" name="ODK" sequence="30" active="True"   />
-        <menuitem id="odk_menu_config" name="Configuration" active="True"  parent="odk_menu_root" sequence="1"
-                    action="action_odk_config"/>
-        <menuitem id="odk_menu_import" name="Import Records" active="True"  parent="odk_menu_root" sequence="2"
-                    action="action_odk_import"/>
+        <menuitem id="odk_menu_root" name="ODK" sequence="30" active="True" />
+        <menuitem
+            id="odk_menu_config"
+            name="Configuration"
+            active="True"
+            parent="odk_menu_root"
+            sequence="1"
+            action="action_odk_config"
+        />
+        <menuitem
+            id="odk_menu_import"
+            name="Import Records"
+            active="True"
+            parent="odk_menu_root"
+            sequence="2"
+            action="action_odk_import"
+        />
     </data>
 </odoo>
