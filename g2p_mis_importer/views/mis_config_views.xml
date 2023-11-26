@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8" ?>
 <odoo>
     <record id="action_mis_conf_action" model="ir.actions.server">
         <field name="name">MIS Config Start</field>
@@ -46,56 +46,66 @@
         <field name="arch" type="xml">
             <form string="MIS Configuration">
                 <header>
-                    <button name="test_connection" string="Test Connection" type="object" class="oe_highlight"/>
-                    <button name="import_records" string="Import Records" type="object" class="oe_highlight" />
+                    <button
+                        name="test_connection"
+                        string="Test Connection"
+                        type="object"
+                        class="oe_highlight"
+                    />
+                    <button
+                        name="import_records"
+                        string="Import Records"
+                        type="object"
+                        class="oe_highlight"
+                    />
                 </header>
 
                 <sheet>
                     <div class="oe_button_box" name="button_box">
                             <button
-                                type="action"
-                                name="%(action_mis_conf_action)d"
-                                icon="fa-play"
-                                attrs="{'invisible':[('job_status','!=','draft')]}"
-                            >
+                            type="action"
+                            name="%(action_mis_conf_action)d"
+                            icon="fa-play"
+                            attrs="{'invisible':[('job_status','!=','draft')]}"
+                        >
                                 <span class="o_stat_text">Start</span>
                             </button>
                             <button
-                                type="action"
-                                name="%(action_mis_conf_action)d"
-                                icon="fa-stop"
-                                attrs="{'invisible':[('job_status','!=','started'),('job_status','!=','running')]}"
-                            >
+                            type="action"
+                            name="%(action_mis_conf_action)d"
+                            icon="fa-stop"
+                            attrs="{'invisible':[('job_status','!=','started'),('job_status','!=','running')]}"
+                        >
                                 <span class="o_stat_text">Stop</span>
                             </button>
                             <button
-                                type="action"
-                                name="%(action_mis_conf_action)d"
-                                icon="fa-repeat"
-                                attrs="{'invisible':[('job_status','!=','completed')]}"
-                            >
+                            type="action"
+                            name="%(action_mis_conf_action)d"
+                            icon="fa-repeat"
+                            attrs="{'invisible':[('job_status','!=','completed')]}"
+                        >
                                 <span class="o_stat_text">Restart</span>
                             </button>
                         </div>
                     <group string="MIS Central">
-                        <field name="name"/>
-                        <field name="mis_api_url"/>
-                        <field name="mis_login_url"/>
-                        <field name="mis_logout_url"/>
-                        <field name="database"/>
-                        <field name="username"/>
-                        <field name="password" password="True"/>
+                        <field name="name" />
+                        <field name="mis_api_url" />
+                        <field name="mis_login_url" />
+                        <field name="mis_logout_url" />
+                        <field name="database" />
+                        <field name="username" />
+                        <field name="password" password="True" />
                         <field name="job_status" invisible="True" />
-                        <field name="mis_id_type"/>
-                        <field name="mis_program_id"/>
+                        <field name="mis_id_type" />
+                        <field name="mis_program_id" />
                     </group>
                     <!-- <group string="Target settings">
-                        <field name="target_registry"/>                        
-                        <field name="json_formatter"/>                        
+                        <field name="target_registry"/>
+                        <field name="json_formatter"/>
                     </group> -->
                      <group string="Time interval">
-                        <field name="interval_minutes"/> 
-                        <field name="last_updated_at"/>                       
+                        <field name="interval_minutes" />
+                        <field name="last_updated_at" />
                     </group>
                 </sheet>
             </form>
@@ -110,5 +120,5 @@
         <!-- <field name="search_view_id" ref="mis_connector.view_mis_config_search"/> -->
         <field name="context">{}</field>
     </record>
-    
+
 </odoo>
