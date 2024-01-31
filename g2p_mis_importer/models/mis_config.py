@@ -14,7 +14,7 @@ class MisConfig(models.Model):
     _name = "mis.config"
     _description = "MIS Configuration"
 
-    name = fields.Char(string="Name", required=True)
+    name = fields.Char(required=True)
     mis_api_url = fields.Char(string="MIS API URL", required=True)
     mis_login_url = fields.Char(string="MIS Login URL", required=True)
     mis_logout_url = fields.Char(string="MIS Logout URL", required=True)
@@ -86,7 +86,7 @@ class MisConfig(models.Model):
             )
             response.raise_for_status()
 
-        except Exception:
+        except Exception as e:
             _logger.error(f"Test Connection failed: {str(e)}")
             raise UserError(_("Failed to connect to remote MIS"))
         finally:

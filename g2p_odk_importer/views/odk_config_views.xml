@@ -21,20 +21,23 @@
                 <button
                     type="action"
                     name="%(action_odk_conf_action)d"
-                    attrs="{'invisible':[('job_status','!=','draft')]}"
+                    invisible="job_status != 'draft'"
                     string="Start"
+                    title="Action odk conf action"
                 />
                 <button
                     type="action"
                     name="%(action_odk_conf_action)d"
-                    attrs="{'invisible':[('job_status','!=','started'),('job_status','!=','running')]}"
+                    invisible="job_status not in ('started','running')"
                     string="Stop"
+                    title="Action odk conf action"
                 />
                 <button
                     type="action"
                     name="%(action_odk_conf_action)d"
-                    attrs="{'invisible':[('job_status','!=','completed')]}"
+                    invisible="job_status != 'completed"
                     string="Restart"
+                    title="Action odk conf action"
                 />
             </tree>
         </field>
@@ -51,12 +54,14 @@
                         string="Test Connection"
                         type="object"
                         class="oe_highlight"
+                        titile="Test connection"
                     />
                     <button
                         name="import_records"
                         string="Import Records"
                         type="object"
                         class="oe_highlight"
+                        title="Import records"
                     />
                 </header>
 
@@ -66,7 +71,8 @@
                             type="action"
                             name="%(action_odk_conf_action)d"
                             icon="fa-play"
-                            attrs="{'invisible':[('job_status','!=','draft')]}"
+                            invisible="job_status != 'draft'"
+                            title="Action odk conf action"
                         >
                                 <span class="o_stat_text">Start</span>
                             </button>
@@ -74,7 +80,8 @@
                             type="action"
                             name="%(action_odk_conf_action)d"
                             icon="fa-stop"
-                            attrs="{'invisible':[('job_status','!=','started'),('job_status','!=','running')]}"
+                            invisible="job_status not in ('started','running')"
+                            title="Action odk conf action"
                         >
                                 <span class="o_stat_text">Stop</span>
                             </button>
@@ -82,7 +89,8 @@
                             type="action"
                             name="%(action_odk_conf_action)d"
                             icon="fa-repeat"
-                            attrs="{'invisible':[('job_status','!=','completed')]}"
+                            invisible="job_status != 'completed'"
+                            title="Action odk conf action"
                         >
                                 <span class="o_stat_text">Restart</span>
                             </button>

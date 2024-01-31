@@ -12,11 +12,11 @@ class OdkConfig(models.Model):
     _name = "odk.config"
     _description = "ODK Configuration"
 
-    name = fields.Char(string="Name", required=True)
+    name = fields.Char(required=True)
     base_url = fields.Char(string="Base URL", required=True)
-    username = fields.Char(string="Username", required=True)
-    password = fields.Char(string="Password", required=True)
-    project = fields.Char(string="Project", required=False)
+    username = fields.Char(required=True)
+    password = fields.Char(required=True)
+    project = fields.Char(required=False)
     form_id = fields.Char(string="Form ID", required=False)
     json_formatter = fields.Text(string="JSON Formatter", required=False)
     target_registry = fields.Selection(
@@ -65,10 +65,8 @@ class OdkConfig(models.Model):
             client.import_delta_records(last_sync_timestamp=config.last_sync_time)
             config.update({"last_sync_time": fields.Datetime.now()})
 
-    def import_records_by_id(self, id):
-
-        print("ID:", id)
-        config = self.env["odk.config"].browse(id)
+    def import_records_by_id(self, _id):
+        config = self.env["odk.config"].browse(_id)
         client = ODKClient(
             self.env,
             config.base_url,
