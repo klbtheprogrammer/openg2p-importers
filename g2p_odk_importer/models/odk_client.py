@@ -1,11 +1,14 @@
 # models/odk_client.py
 
 import json
+import logging
 
 import jq
 import requests
 
 from odoo.http import request
+
+_logger = logging.getLogger(__name__)
 
 
 class ODKClient:
@@ -25,7 +28,6 @@ class ODKClient:
         target_registry,
         json_formatter=".",
     ):
-        print(base_url)
 
         self.base_url = base_url.rstrip("/")
         self.username = username
@@ -44,7 +46,6 @@ class ODKClient:
         data = json.dumps({"email": self.username, "password": self.password})
         response = requests.post(login_url, headers=headers, data=data)
         if response.status_code == 200:
-            print("RESPONSE", response.json())
             self.session = response.json()["token"]
         else:
             raise Exception(f"Login failed: {response.text}")
@@ -57,7 +58,7 @@ class ODKClient:
         response = requests.get(info_url, headers=headers)
         if response.status_code == 200:
             user = response.json()
-            print(f'Connected to ODK Central as {user["displayName"]}')
+            _logger.info(f'Connected to ODK Central as {user["displayName"]}')
         else:
             raise Exception(f"Connection test failed: {response}")
 
@@ -73,10 +74,8 @@ class ODKClient:
         top=100,
     ):
         url = f"{self.base_url}/v1/projects/{self.project_id}/forms/{self.form_id}.svc/Submissions"
-        print("last_sync_timestamp", last_sync_timestamp)
         if last_sync_timestamp:
             startdate = last_sync_timestamp.strftime("%Y-%m-%dT%H:%M:%S.000Z")
-            print("startdate", startdate)
             params = {
                 "$top": top,
                 "$skip": skip,
@@ -109,36 +108,30 @@ class ODKClient:
                 params=payload,
                 json=payload,
             )
-            print("Response for login", response.text)
             if response.status_code == 200:
                 result = response.json()
                 if "error" in result:
                     error_message = result["error"]["data"]["message"]
-                    print(f"Login failed: {error_message}")
+                    _logger.error(f"Login failed: {error_message}")
                 elif "session" in result:
                     session_id = result["session"]["sid"]
                     user_id = result["user_context"]["uid"]
-                    print(
+                    _logger.info(
                         f"Login successful! Session ID: {session_id}, User ID: {user_id}"
                     )
 
                 else:
-                    print("Error connecting to Odoo server.")
+                    _logger.error("Error connecting to Odoo server.")
         headers = {
             "Content-Type": "application/json",
             "Cookie": "session_id=" + session_id,
         }
 
         # base_url = http.request.httprequest.base_url
-        # print("base_url : ", base_url)
-        print("target_registry", self.target_registry)
+        _logger.info("target_registry", self.target_registry)
         for record in data["value"]:
-            print("data", data)
             # record = data["value"][0]
-            # print("Formatter : ", self.json_formatter)
             mapped_json = jq.compile(self.json_formatter).input(record).text()
-
-            print("Mapped : ", mapped_json)
             try:
 
                 service_response = requests.post(
@@ -147,12 +140,10 @@ class ODKClient:
                     data=mapped_json,
                 )
                 service_response.raise_for_status()
-                print("Response", service_response.content)
-                print("Response", service_response.text)
             except AttributeError as ex:
-                print("Attribute Error", ex)
+                _logger.error("Attribute Error", ex)
             except Exception as ex:
-                print("An exception occurred", ex)
+                _logger.error("An exception occurred", ex)
 
         return data
 
