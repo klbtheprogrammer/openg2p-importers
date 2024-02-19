@@ -35,7 +35,7 @@
                 <button
                     type="action"
                     name="%(action_mis_conf_action)d"
-                    invisible="job_status != 'completed"
+                    invisible="job_status != 'completed'"
                     string="Restart"
                     title="Action mis conf action"
                 />
