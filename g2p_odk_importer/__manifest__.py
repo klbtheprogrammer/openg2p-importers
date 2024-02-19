@@ -13,7 +13,7 @@
         "connector",
         "base",
         "web",
-        "g2p_registry_rest_api",
+        # "g2p_registry_rest_api",
         "component",
         "queue_job",
     ],
