@@ -20,7 +20,7 @@ class OdkConfig(models.Model):
     form_id = fields.Char(string="Form ID", required=False)
     json_formatter = fields.Text(string="JSON Formatter", required=False)
     target_registry = fields.Selection(
-        [("individual", "Individual"), ("group", "Group")]
+        [("individual", "Individual"), ("group", "Group")], required=True
     )
     last_sync_time = fields.Datetime(string="Last synced on", required=False)
     cron_id = fields.Many2one("ir.cron", string="Cron Job", required=False)
@@ -41,12 +41,30 @@ class OdkConfig(models.Model):
     end_datetime = fields.Datetime(string="End Time", required=False)
 
     def test_connection(self):
+
         for config in self:
             client = ODKClient(
-                self.env, config.base_url, config.username, config.password
+                self.env,
+                config.base_url,
+                config.username,
+                config.password,
+                config.project,
+                config.form_id,
+                config.target_registry,
             )
             client.login()
-            client.test_connection()
+            test = client.test_connection()
+            if test:
+                message = "Tested successfully."
+            return {
+                "type": "ir.actions.client",
+                "tag": "display_notification",
+                "params": {
+                    "type": "success",
+                    "message": message,
+                    "next": {"type": "ir.actions.act_window_close"},
+                },
+            }
 
     def import_records(self):
         for config in self:
@@ -61,9 +79,25 @@ class OdkConfig(models.Model):
                 config.json_formatter,
             )
             client.login()
-            # try:
-            client.import_delta_records(last_sync_timestamp=config.last_sync_time)
+            imported = client.import_delta_records(
+                last_sync_timestamp=config.last_sync_time
+            )
             config.update({"last_sync_time": fields.Datetime.now()})
+            if imported.get("value"):
+                message = "ODK form records were imported successfully."
+                types = "success"
+            else:
+                message = "No new form records were submitted."
+                types = "warning"
+            return {
+                "type": "ir.actions.client",
+                "tag": "display_notification",
+                "params": {
+                    "type": types,
+                    "message": message,
+                    "next": {"type": "ir.actions.act_window_close"},
+                },
+            }
 
     def import_records_by_id(self, _id):
         config = self.env["odk.config"].browse(_id)
@@ -78,12 +112,8 @@ class OdkConfig(models.Model):
             config.json_formatter,
         )
         client.login()
-        # try:
         client.import_delta_records(last_sync_timestamp=config.last_sync_time)
         config.update({"last_sync_time": fields.Datetime.now()})
-
-        # except ex:
-        #     print("Error",ex)
 
     def odk_import_action_trigger(self):
         for rec in self:

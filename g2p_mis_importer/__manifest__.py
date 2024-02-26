@@ -8,7 +8,7 @@
     "website": "https://github.com/OpenG2P/openg2p-auth",
     "license": "Other OSI approved licence",
     "development_status": "Alpha",
-    "depends": ["g2p_registry_rest_api", "g2p_programs", "queue_job"],
+    "depends": ["g2p_programs", "queue_job"],
     "data": [
         "security/ir.model.access.csv",
         "views/mis_config_views.xml",

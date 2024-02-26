@@ -10,13 +10,5 @@
         sequence="1"
         action="action_odk_config"
     />
-    <menuitem
-        id="odk_menu_import"
-        name="Import Records"
-        active="True"
-        parent="odk_menu_root"
-        sequence="2"
-        action="action_odk_import"
-    />
 
 </odoo>
