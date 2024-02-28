@@ -6,25 +6,27 @@
     "summary": "Import records from ODK",
     "version": "15.0.0.0.1",
     "sequence": 3,
-    "author": "Newlogic",
+    "author": "OpenG2P",
     "website": "https://github.com/OpenG2P/openg2p-auth",
     "license": "LGPL-3",
-    "category": "Connector",
     "depends": [
         "connector",
         "base",
         "web",
-        "g2p_registry_rest_api",
         "component",
         "queue_job",
     ],
     "data": [
         "security/ir.model.access.csv",
         "views/odk_config_views.xml",
-        "views/odk_import_views.xml",
         "views/odk_menu.xml",
-        "data/odk_cron.xml",
+        # "views/odk_import_views.xml",
     ],
+    "external_dependencies": {
+        "python": [
+            "jq",
+        ]
+    },
     "application": True,
     "installable": True,
     "auto_install": False,
