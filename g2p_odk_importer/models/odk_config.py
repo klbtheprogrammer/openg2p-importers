@@ -83,9 +83,12 @@ class OdkConfig(models.Model):
                 last_sync_timestamp=config.last_sync_time
             )
             config.update({"last_sync_time": fields.Datetime.now()})
-            if imported.get("value"):
+            if "form_updated" in imported:
                 message = "ODK form records were imported successfully."
                 types = "success"
+            elif "form_failed" in imported:
+                message = "Imported failed"
+                types = "danger"
             else:
                 message = "No new form records were submitted."
                 types = "warning"
