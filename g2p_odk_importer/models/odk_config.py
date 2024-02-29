@@ -18,7 +18,7 @@ class OdkConfig(models.Model):
     password = fields.Char(required=True)
     project = fields.Char(required=False)
     form_id = fields.Char(string="Form ID", required=False)
-    json_formatter = fields.Text(string="JSON Formatter", required=False)
+    json_formatter = fields.Text(string="JSON Formatter", required=True)
     target_registry = fields.Selection(
         [("individual", "Individual"), ("group", "Group")], required=True
     )
