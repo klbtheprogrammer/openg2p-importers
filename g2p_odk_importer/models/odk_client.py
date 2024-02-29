@@ -1,8 +1,11 @@
 import json
 import logging
 
-import jq
+import pyjq
 import requests
+
+from odoo import _
+from odoo.exceptions import ValidationError
 
 _logger = logging.getLogger(__name__)
 
@@ -19,7 +22,6 @@ class ODKClient:
         target_registry,
         json_formatter=".",
     ):
-
         self.base_url = base_url.rstrip("/")
         self.username = username
         self.password = password
@@ -34,24 +36,30 @@ class ODKClient:
         login_url = f"{self.base_url}/v1/sessions"
         headers = {"Content-Type": "application/json"}
         data = json.dumps({"email": self.username, "password": self.password})
-        response = requests.post(login_url, headers=headers, data=data)
-        if response.status_code == 200:
-            self.session = response.json()["token"]
-        else:
-            raise Exception(f"Login failed: {response.text}")
+        try:
+            response = requests.post(login_url, headers=headers, data=data)
+            response.raise_for_status()
+            if response.status_code == 200:
+                self.session = response.json()["token"]
+        except Exception as e:
+            _logger.exception("Login failed: %s", e)
+            raise ValidationError(f"Login failed: {e}")
 
     def test_connection(self):
         if not self.session:
-            raise Exception("Session not created")
+            raise ValidationError(_("Session not created"))
         info_url = f"{self.base_url}/v1/users/current"
         headers = {"Authorization": f"Bearer {self.session}"}
-        response = requests.get(info_url, headers=headers)
-        if response.status_code == 200:
-            user = response.json()
-            _logger.info(f'Connected to ODK Central as {user["displayName"]}')
-            return True
-        else:
-            raise Exception(f"Connection test failed: {response}")
+        try:
+            response = requests.get(info_url, headers=headers)
+            response.raise_for_status()
+            if response.status_code == 200:
+                user = response.json()
+                _logger.info(f'Connected to ODK Central as {user["displayName"]}')
+                return True
+        except Exception as e:
+            _logger.exception("Connection test failed: %s", e)
+            raise ValidationError(f"Connection test failed: {e}")
 
     def import_delta_records(
         self,
@@ -74,26 +82,26 @@ class ODKClient:
             params = {"$top": top, "$skip": skip, "$count": "true", "$expand": "*"}
 
         headers = {"Authorization": f"Bearer {self.session}"}
-        response = requests.get(url, headers=headers, params=params)
-        response.raise_for_status()
-
+        try:
+            response = requests.get(url, headers=headers, params=params)
+            response.raise_for_status()
+        except Exception as e:
+            _logger.exception("Failed to parse response: %s", e)
+            raise ValidationError(f"Failed to parse response: {e}")
         data = response.json()
-
         for member in data["value"]:
             try:
-                mapped_json = jq.compile(self.json_formatter).input(member).text()
-                mapped_dict = json.loads(mapped_json)
+                mapped_json = pyjq.compile(self.json_formatter).all(member)[0]
 
                 if self.target_registry == "individual":
-                    mapped_dict.update({"is_registrant": True, "is_group": False})
+                    mapped_json.update({"is_registrant": True, "is_group": False})
                 elif self.target_registry == "group":
-                    mapped_dict.update({"is_registrant": True, "is_group": True})
+                    mapped_json.update({"is_registrant": True, "is_group": True})
 
                 # TODO: Handle many one2many based on requirements
                 # phone one2many
-
-                if "phone_number_ids" in mapped_dict:
-                    mapped_dict["phone_number_ids"] = [
+                if "phone_number_ids" in mapped_json:
+                    mapped_json["phone_number_ids"] = [
                         (
                             0,
                             0,
@@ -103,33 +111,40 @@ class ODKClient:
                                 "disabled": phone.get("disabled", None),
                             },
                         )
-                        for phone in mapped_dict["phone_number_ids"]
+                        for phone in mapped_json["phone_number_ids"]
                     ]
 
                 # Membership one2many
                 if (
-                    "group_membership_ids" in mapped_dict
+                    "group_membership_ids" in mapped_json
                     and self.target_registry == "group"
                 ):
                     individual_ids = []
                     head_added = False
-
-                    for individual_mem in mapped_dict.get("group_membership_ids"):
+                    for individual_mem in mapped_json.get("group_membership_ids"):
                         # Create individual partner
                         individual = (
                             self.env["res.partner"]
                             .sudo()
                             .create(
                                 {
-                                    "family_name": individual_mem.get("name", None),
-                                    "given_name": individual_mem.get("name", None),
+                                    "given_name": individual_mem.get(
+                                        "name", None
+                                    ).split(" ")[0],
+                                    "family_name": individual_mem.get(
+                                        "name", None
+                                    ).split(" ")[-1],
+                                    "addl_name": " ".join(
+                                        individual_mem.get("name", None).split(" ")[
+                                            1:-1
+                                        ]
+                                    ),
                                     "name": individual_mem.get("name", None),
                                     "is_registrant": True,
                                     "is_group": False,
                                     "gender": self.get_gender(
                                         individual_mem.get("sex", None)
                                     ),
-                                    "age": individual_mem.get("age", None),
                                 }
                             )
                         )
@@ -149,11 +164,11 @@ class ODKClient:
 
                             individual_ids.append((0, 0, individual_data))
 
-                    mapped_dict["group_membership_ids"] = individual_ids
+                    mapped_json["group_membership_ids"] = individual_ids
 
                 # Reg_ids one2many
-                if "reg_ids" in mapped_dict:
-                    mapped_dict["reg_ids"] = [
+                if "reg_ids" in mapped_json:
+                    mapped_json["reg_ids"] = [
                         (
                             0,
                             0,
@@ -167,16 +182,17 @@ class ODKClient:
                                 "expiry_date": reg_id.get("expiry_date", None),
                             },
                         )
-                        for reg_id in mapped_dict["reg_ids"]
+                        for reg_id in mapped_json["reg_ids"]
                     ]
 
                 # update value into the res_partner table
-                self.env["res.partner"].sudo().create(mapped_dict)
-                data.update({"updated": True})
-
+                self.env["res.partner"].sudo().create(mapped_json)
+                data.update({"form_updated": True})
             except AttributeError as ex:
+                data.update({"form_failed": True})
                 _logger.error("Attribute Error", ex)
             except Exception as ex:
+                data.update({"form_failed": True})
                 _logger.error("An exception occurred", ex)
 
         return data
@@ -193,12 +209,11 @@ class ODKClient:
             )
 
     def get_gender(self, gender_val):
-        if gender_val in [1, 2]:
-            gender_str = "male" if gender_val == 1 else "female"
+        if gender_val:
             gender = (
                 self.env["gender.type"]
                 .sudo()
-                .search([("code", "ilike", gender_str)], limit=1)
+                .search([("code", "=", gender_val)], limit=1)
             )
             if gender:
                 return gender.code
