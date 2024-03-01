@@ -87,7 +87,7 @@ class OdkConfig(models.Model):
                 message = "ODK form records were imported successfully."
                 types = "success"
             elif "form_failed" in imported:
-                message = "Imported failed"
+                message = "ODK form import failed"
                 types = "danger"
             else:
                 message = "No new form records were submitted."
