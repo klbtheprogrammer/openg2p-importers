@@ -91,7 +91,7 @@
                         <field name="name" />
                         <field name="base_url" />
                         <field name="username" />
-                        <field name="password" />
+                        <field name="password" password="True" />
                         <field name="job_status" invisible="True" />
                     </group>
                     <group string="Project details">
@@ -104,6 +104,9 @@
                     </group>
                      <group string="Time interval">
                         <field name="interval_hours" />
+                    </group>
+                    <group string="Program details">
+                        <field name="odk_program_id" />
                     </group>
                 </sheet>
             </form>
