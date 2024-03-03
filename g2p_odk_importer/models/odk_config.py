@@ -1,7 +1,10 @@
 import logging
 from datetime import datetime, timedelta
 
-from odoo import fields, models
+import pyjq
+
+from odoo import _, api, fields, models
+from odoo.exceptions import ValidationError
 
 from .odk_client import ODKClient
 
@@ -39,6 +42,18 @@ class OdkConfig(models.Model):
     interval_hours = fields.Integer(string="Interval in hours", required=False)
     start_datetime = fields.Datetime(string="Start Time", required=False)
     end_datetime = fields.Datetime(string="End Time", required=False)
+    odk_program_id = fields.Many2one("g2p.program", string="ODK Program ID")
+
+    @api.constrains("json_formatter")
+    def constraint_json_fields(self):
+        for rec in self:
+            if rec.json_formatter:
+                try:
+                    pyjq.compile(rec.json_formatter)
+                except ValueError as ve:
+                    raise ValidationError(
+                        _("Json Format is not valid pyjq expression.")
+                    ) from ve
 
     def test_connection(self):
 
@@ -80,7 +95,8 @@ class OdkConfig(models.Model):
             )
             client.login()
             imported = client.import_delta_records(
-                last_sync_timestamp=config.last_sync_time
+                last_sync_timestamp=config.last_sync_time,
+                program_id=config.odk_program_id,
             )
             config.update({"last_sync_time": fields.Datetime.now()})
             if "form_updated" in imported:
@@ -115,7 +131,9 @@ class OdkConfig(models.Model):
             config.json_formatter,
         )
         client.login()
-        client.import_delta_records(last_sync_timestamp=config.last_sync_time)
+        client.import_delta_records(
+            last_sync_timestamp=config.last_sync_time, program_id=config.odk_program_id
+        )
         config.update({"last_sync_time": fields.Datetime.now()})
 
     def odk_import_action_trigger(self):

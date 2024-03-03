@@ -13,6 +13,7 @@
         "connector",
         "base",
         "web",
+        "g2p_programs",
         "component",
         "queue_job",
     ],

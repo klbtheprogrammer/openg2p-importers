@@ -1,5 +1,6 @@
 import json
 import logging
+from datetime import date
 
 import pyjq
 import requests
@@ -64,6 +65,7 @@ class ODKClient:
     def import_delta_records(
         self,
         last_sync_timestamp=None,
+        program_id=None,
         skip=0,
         top=100,
     ):
@@ -89,6 +91,7 @@ class ODKClient:
             _logger.exception("Failed to parse response: %s", e)
             raise ValidationError(f"Failed to parse response: {e}")
         data = response.json()
+
         for member in data["value"]:
             try:
                 mapped_json = pyjq.compile(self.json_formatter).all(member)[0]
@@ -114,6 +117,42 @@ class ODKClient:
                         for phone in mapped_json["phone_number_ids"]
                     ]
 
+                # program registrant info
+                if (
+                    self.target_registry == "individual"
+                    and program_id
+                    and "program_registrant_info_ids" in mapped_json
+                ):
+                    individual = self.get_individual_data(mapped_json)
+                    mapped_json.update(individual)
+                    prog_reg_info = mapped_json["program_registrant_info_ids"].get(
+                        "data", None
+                    )
+                    mapped_json["program_membership_ids"] = [
+                        (
+                            0,
+                            0,
+                            {
+                                "program_id": program_id.id,
+                                "state": "draft",
+                                "enrollment_date": date.today(),
+                            },
+                        )
+                    ]
+                    mapped_json["program_registrant_info_ids"] = [
+                        (
+                            0,
+                            0,
+                            {
+                                "program_id": program_id.id,
+                                "state": "active",
+                                "program_registrant_info": json.dumps(prog_reg_info)
+                                if prog_reg_info
+                                else None,
+                            },
+                        )
+                    ]
+
                 # Membership one2many
                 if (
                     "group_membership_ids" in mapped_json
@@ -123,30 +162,10 @@ class ODKClient:
                     head_added = False
                     for individual_mem in mapped_json.get("group_membership_ids"):
                         # Create individual partner
+
+                        individual_data = self.get_individual_data(individual_mem)
                         individual = (
-                            self.env["res.partner"]
-                            .sudo()
-                            .create(
-                                {
-                                    "given_name": individual_mem.get(
-                                        "name", None
-                                    ).split(" ")[0],
-                                    "family_name": individual_mem.get(
-                                        "name", None
-                                    ).split(" ")[-1],
-                                    "addl_name": " ".join(
-                                        individual_mem.get("name", None).split(" ")[
-                                            1:-1
-                                        ]
-                                    ),
-                                    "name": individual_mem.get("name", None),
-                                    "is_registrant": True,
-                                    "is_group": False,
-                                    "gender": self.get_gender(
-                                        individual_mem.get("sex", None)
-                                    ),
-                                }
-                            )
+                            self.env["res.partner"].sudo().create(individual_data)
                         )
                         if individual:
                             kind = None
@@ -221,3 +240,24 @@ class ODKClient:
                 return None
         else:
             return None
+
+    def get_individual_data(self, record):
+        name = record.get("name", None)
+        given_name = name.split(" ")[0]
+        family_name = name.split(" ")[-1]
+        dob = record.get("birthdate", None)
+        addl_name = " ".join(name.split(" ")[1:-1])
+        gender = self.get_gender(record.get("sex", None) or record.get("gender", None))
+
+        vals = {
+            "name": name,
+            "given_name": given_name,
+            "family_name": family_name,
+            "addl_name": addl_name,
+            "is_registrant": True,
+            "is_group": False,
+            "birthdate": dob,
+            "gender": gender,
+        }
+
+        return vals
