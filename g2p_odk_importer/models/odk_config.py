@@ -131,7 +131,9 @@ class OdkConfig(models.Model):
             config.json_formatter,
         )
         client.login()
-        client.import_delta_records(last_sync_timestamp=config.last_sync_time,program_id=config.odk_program_id)
+        client.import_delta_records(
+            last_sync_timestamp=config.last_sync_time, program_id=config.odk_program_id
+        )
         config.update({"last_sync_time": fields.Datetime.now()})
 
     def odk_import_action_trigger(self):

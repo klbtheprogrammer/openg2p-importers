@@ -1,5 +1,6 @@
 import json
 import logging
+from datetime import date
 
 import pyjq
 import requests
@@ -127,6 +128,17 @@ class ODKClient:
                     prog_reg_info = mapped_json["program_registrant_info_ids"].get(
                         "data", None
                     )
+                    mapped_json["program_membership_ids"] = [
+                        (
+                            0,
+                            0,
+                            {
+                                "program_id": program_id.id,
+                                "state": "draft",
+                                "enrollment_date": date.today(),
+                            },
+                        )
+                    ]
                     mapped_json["program_registrant_info_ids"] = [
                         (
                             0,
