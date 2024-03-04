@@ -146,7 +146,7 @@ class ODKClient:
                             {
                                 "program_id": program_id.id,
                                 "state": "active",
-                                "program_registrant_info": json.dumps(prog_reg_info)
+                                "program_registrant_info": prog_reg_info
                                 if prog_reg_info
                                 else None,
                             },
