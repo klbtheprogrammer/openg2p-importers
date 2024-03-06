@@ -13,9 +13,9 @@
         "connector",
         "base",
         "web",
-        # "g2p_registry_rest_api",
         "component",
         "queue_job",
+        "g2p_programs",
     ],
     "data": [
         "security/ir.model.access.csv",
