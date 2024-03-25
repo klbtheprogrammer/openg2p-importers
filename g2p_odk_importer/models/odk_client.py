@@ -44,7 +44,7 @@ class ODKClient:
                 self.session = response.json()["token"]
         except Exception as e:
             _logger.exception("Login failed: %s", e)
-            raise ValidationError(f"Login failed: {e}")
+            raise ValidationError(f"Login failed: {e}") from e
 
     def test_connection(self):
         if not self.session:
@@ -60,7 +60,7 @@ class ODKClient:
                 return True
         except Exception as e:
             _logger.exception("Connection test failed: %s", e)
-            raise ValidationError(f"Connection test failed: {e}")
+            raise ValidationError(f"Connection test failed: {e}") from e
 
     def import_delta_records(
         self,
@@ -89,7 +89,7 @@ class ODKClient:
             response.raise_for_status()
         except Exception as e:
             _logger.exception("Failed to parse response: %s", e)
-            raise ValidationError(f"Failed to parse response: {e}")
+            raise ValidationError(f"Failed to parse response: {e}") from e
         data = response.json()
 
         for member in data["value"]:
