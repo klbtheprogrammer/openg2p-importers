@@ -80,7 +80,7 @@ class TestODKClient(TransactionCase):
 
     @patch("requests.get")
     def test_test_connection_failure(self, mock_get):
-        mock_get.return_value.status_code = 404
+        mock_get.side_effect = Exception("Connection Error")
 
         odk_client = ODKClient(
             self.env_mock,
@@ -94,6 +94,7 @@ class TestODKClient(TransactionCase):
         )
 
         odk_client.session = "test_token"
+
         with self.assertRaises(ValidationError):
             odk_client.test_connection()
 
@@ -121,7 +122,7 @@ class TestODKClient(TransactionCase):
 
     @patch("requests.get")
     def test_import_delta_records_failure(self, mock_get):
-        mock_get.return_value.status_code = 404
+        mock_get.side_effect = Exception("import Error")
 
         odk_client = ODKClient(
             self.env_mock,
