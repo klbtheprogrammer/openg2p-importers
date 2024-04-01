@@ -7,7 +7,7 @@ class OdkImport(models.Model):
     _name = "odk.import"
     _description = "ODK Import"
 
-    name = fields.Char(string="Name", required=True)
+    name = fields.Char(required=True)
     odk_config_id = fields.Many2one(
         comodel_name="odk.config", string="ODK Configuration", required=True
     )
