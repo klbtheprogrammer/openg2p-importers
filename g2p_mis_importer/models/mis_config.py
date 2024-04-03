@@ -83,6 +83,8 @@ class MisConfig(models.Model):
         finally:
             self.logout()
 
+    # TODO: Split the methods into smaller methods
+    # ruff: noqa: C901
     def import_records(self, config_id=None):
         if config_id:
             config = self.browse(config_id)

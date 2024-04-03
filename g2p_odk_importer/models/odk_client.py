@@ -38,7 +38,7 @@ class ODKClient:
         headers = {"Content-Type": "application/json"}
         data = json.dumps({"email": self.username, "password": self.password})
         try:
-            response = requests.post(login_url, headers=headers, data=data)
+            response = requests.post(login_url, headers=headers, data=data, timeout=10)
             response.raise_for_status()
             if response.status_code == 200:
                 self.session = response.json()["token"]
@@ -52,7 +52,7 @@ class ODKClient:
         info_url = f"{self.base_url}/v1/users/current"
         headers = {"Authorization": f"Bearer {self.session}"}
         try:
-            response = requests.get(info_url, headers=headers)
+            response = requests.get(info_url, headers=headers, timeout=10)
             response.raise_for_status()
             if response.status_code == 200:
                 user = response.json()
@@ -69,7 +69,6 @@ class ODKClient:
         skip=0,
         top=100,
     ):
-
         url = f"{self.base_url}/v1/projects/{self.project_id}/forms/{self.form_id}.svc/Submissions"
         if last_sync_timestamp:
             startdate = last_sync_timestamp.strftime("%Y-%m-%dT%H:%M:%S.000Z")
@@ -85,7 +84,7 @@ class ODKClient:
 
         headers = {"Authorization": f"Bearer {self.session}"}
         try:
-            response = requests.get(url, headers=headers, params=params)
+            response = requests.get(url, headers=headers, params=params, timeout=10)
             response.raise_for_status()
         except Exception as e:
             _logger.exception("Failed to parse response: %s", e)
@@ -125,9 +124,7 @@ class ODKClient:
                 ):
                     individual = self.get_individual_data(mapped_json)
                     mapped_json.update(individual)
-                    prog_reg_info = mapped_json["program_registrant_info_ids"].get(
-                        "data", None
-                    )
+                    prog_reg_info = mapped_json["program_registrant_info_ids"].get("data", None)
                     mapped_json["program_membership_ids"] = [
                         (
                             0,
@@ -146,34 +143,23 @@ class ODKClient:
                             {
                                 "program_id": program_id.id,
                                 "state": "active",
-                                "program_registrant_info": prog_reg_info
-                                if prog_reg_info
-                                else None,
+                                "program_registrant_info": prog_reg_info if prog_reg_info else None,
                             },
                         )
                     ]
 
                 # Membership one2many
-                if (
-                    "group_membership_ids" in mapped_json
-                    and self.target_registry == "group"
-                ):
+                if "group_membership_ids" in mapped_json and self.target_registry == "group":
                     individual_ids = []
                     head_added = False
                     for individual_mem in mapped_json.get("group_membership_ids"):
                         # Create individual partner
 
                         individual_data = self.get_individual_data(individual_mem)
-                        individual = (
-                            self.env["res.partner"].sudo().create(individual_data)
-                        )
+                        individual = self.env["res.partner"].sudo().create(individual_data)
                         if individual:
                             kind = None
-                            if (
-                                individual_mem.get("relationship_with_household_head")
-                                == 1
-                                and not head_added
-                            ):
+                            if individual_mem.get("relationship_with_household_head") == 1 and not head_added:
                                 kind = self.get_or_create_kind("Head")
                                 head_added = True
 
@@ -217,23 +203,15 @@ class ODKClient:
         return data
 
     def get_or_create_kind(self, kind_str):
-        kind = self.env["g2p.group.membership.kind"].search(
-            [("name", "=", kind_str)], limit=1
-        )
+        kind = self.env["g2p.group.membership.kind"].search([("name", "=", kind_str)], limit=1)
         if kind:
             return kind
         else:
-            return (
-                self.env["g2p.group.membership.kind"].sudo().create({"name": kind_str})
-            )
+            return self.env["g2p.group.membership.kind"].sudo().create({"name": kind_str})
 
     def get_gender(self, gender_val):
         if gender_val:
-            gender = (
-                self.env["gender.type"]
-                .sudo()
-                .search([("code", "=", gender_val)], limit=1)
-            )
+            gender = self.env["gender.type"].sudo().search([("code", "=", gender_val)], limit=1)
             if gender:
                 return gender.code
             else:
