@@ -1,0 +1,2 @@
+git+https://github.com/OpenG2P/openg2p-program@17.0-develop#subdirectory=g2p_programs
+git+https://github.com/oca/queue@17.0#subdirectory=queue_job
