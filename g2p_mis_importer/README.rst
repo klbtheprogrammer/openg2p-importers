@@ -19,6 +19,7 @@ G2P MIS Importer
 
 |badge1| |badge2|
 
+OpenG2P MIS IMPORTER MODULE
 
 .. IMPORTANT::
    This is an alpha version, the data model and design can change at any time without warning.
