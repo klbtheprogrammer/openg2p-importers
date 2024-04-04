@@ -5,3 +5,5 @@ git+https://github.com/OpenG2P/openg2p-registry@15.0-develop#subdirectory=setup/
 git+https://github.com/OpenG2P/openg2p-registry@15.0-develop#subdirectory=setup/g2p_bank
 git+https://github.com/OpenG2P/openg2p-security@15.0-develop#subdirectory=setup/g2p_encryption
 git+https://github.com/OpenG2P/openg2p-program@15.0-develop#subdirectory=setup/g2p_programs
+git+https://github.com/OpenG2P/openg2p-registry@15.0-develop#subdirectory=setup/g2p_registry_rest_api
+git+https://github.com/OpenG2P/openg2p-registry@15.0-develop#subdirectory=setup/g2p_bank_rest_api
