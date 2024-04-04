@@ -67,9 +67,7 @@ class TestOdkConfig(TransactionCase):
         self.assertTrue(mock_login.called)
         self.assertTrue(mock_import_delta_records.called)
         self.assertEqual(result["params"]["type"], "success")
-        self.assertEqual(
-            result["params"]["message"], "ODK form records were imported successfully."
-        )
+        self.assertEqual(result["params"]["message"], "ODK form records were imported successfully.")
 
     @patch.object(ODKClient, "login")
     @patch.object(ODKClient, "import_delta_records")
@@ -94,6 +92,4 @@ class TestOdkConfig(TransactionCase):
         self.assertTrue(mock_login.called)
         self.assertTrue(mock_import_delta_records.called)
         self.assertEqual(result["params"]["type"], "warning")
-        self.assertEqual(
-            result["params"]["message"], "No new form records were submitted."
-        )
+        self.assertEqual(result["params"]["message"], "No new form records were submitted.")

@@ -33,14 +33,10 @@ class MisConfig(models.Model):
         required=True,
         default="draft",
     )
-    interval_minutes = fields.Integer(
-        string="Interval in minutes", required=True, default=10
-    )
+    interval_minutes = fields.Integer(string="Interval in minutes", required=True, default=10)
     session_token = fields.Char()
     mis_id_type = fields.Many2one("g2p.id.type", string="MIS ID Type", required=True)
-    mis_program_id = fields.Many2one(
-        "g2p.program", string="MIS Program ID", required=True
-    )
+    mis_program_id = fields.Many2one("g2p.program", string="MIS Program ID", required=True)
 
     def login(self):
         url = self.mis_login_url
@@ -52,7 +48,7 @@ class MisConfig(models.Model):
                 "password": self.password,
             },
         }
-        response = requests.post(url, json=payload)
+        response = requests.post(url, json=payload, timeout=10)
         try:
             response.raise_for_status()
             self.session_token = response.cookies.get("session_id")
@@ -64,10 +60,7 @@ class MisConfig(models.Model):
         url = self.mis_logout_url
         cookies = {"session_id": self.session_token}
 
-        response = requests.get(
-            url,
-            cookies=cookies,
-        )
+        response = requests.get(url, cookies=cookies, timeout=10)
 
         try:
             response.raise_for_status()
@@ -81,20 +74,20 @@ class MisConfig(models.Model):
 
         try:
             test_url = self.mis_api_url
-            response = requests.get(
-                test_url, cookies={"session_id": self.session_token}
-            )
+            response = requests.get(test_url, cookies={"session_id": self.session_token}, timeout=10)
             response.raise_for_status()
 
         except Exception as e:
             _logger.error(f"Test Connection failed: {str(e)}")
-            raise UserError(_("Failed to connect to remote MIS"))
+            raise UserError(_("Failed to connect to remote MIS")) from e
         finally:
             self.logout()
 
-    def import_records(self, id=None):
-        if id:
-            config = self.browse(id)
+    # TODO: Split the methods into smaller methods
+    # ruff: noqa: C901
+    def import_records(self, config_id=None):
+        if config_id:
+            config = self.browse(config_id)
         else:
             config = self
 
@@ -105,27 +98,20 @@ class MisConfig(models.Model):
         individuals_list = []
 
         import_url = config.mis_api_url
-        response = requests.get(
-            import_url, cookies={"session_id": config.session_token}
-        )
+
+        response = requests.get(import_url, cookies={"session_id": config.session_token}, timeout=10)
         response.raise_for_status()
         response = response.json()
 
         for item in response:
             group = None
             create_date_str = item.get("create_date")
-            create_date = datetime.strptime(
-                create_date_str, "%Y-%m-%dT%H:%M:%S.%f%z"
-            ).replace(tzinfo=None)
+            create_date = datetime.strptime(create_date_str, "%Y-%m-%dT%H:%M:%S.%f%z").replace(tzinfo=None)
             write_date_str = item.get("write_date")
-            write_date = datetime.strptime(
-                write_date_str, "%Y-%m-%dT%H:%M:%S.%f%z"
-            ).replace(tzinfo=None)
+            write_date = datetime.strptime(write_date_str, "%Y-%m-%dT%H:%M:%S.%f%z").replace(tzinfo=None)
             prog_reg_info = item.get("program_membership_ids", None)
             if prog_reg_info:
-                prog_reg_info = prog_reg_info[0].get(
-                    "program_registrant_info_ids", None
-                )
+                prog_reg_info = prog_reg_info[0].get("program_registrant_info_ids", None)
             if prog_reg_info:
                 prog_reg_info = prog_reg_info[0].get("program_registrant_info", None)
 
@@ -182,9 +168,7 @@ class MisConfig(models.Model):
                                 0,
                                 {
                                     "bank_id": self.env["res.bank"]
-                                    .search(
-                                        [("name", "=", bank.get("bank_name"))], limit=1
-                                    )[0]
+                                    .search([("name", "=", bank.get("bank_name"))], limit=1)[0]
                                     .id,
                                     "acc_number": bank.get("acc_number"),
                                 },
@@ -215,9 +199,7 @@ class MisConfig(models.Model):
                                 },
                             )
                         ],
-                        "notification_preference": item.get(
-                            "notification_preference", None
-                        ),
+                        "notification_preference": item.get("notification_preference", None),
                         "kind": self.env["g2p.group.kind"]
                         .search([("name", "=", item.get("kind", None))], limit=1)[0]
                         .id
@@ -301,18 +283,14 @@ class MisConfig(models.Model):
                                 0,
                                 {
                                     "bank_id": self.env["res.bank"]
-                                    .search(
-                                        [("name", "=", bank.get("bank_name"))], limit=1
-                                    )[0]
+                                    .search([("name", "=", bank.get("bank_name"))], limit=1)[0]
                                     .id,
                                     "acc_number": bank.get("acc_number"),
                                 },
                             )
                             for bank in item.get("bank_ids")
                         ],
-                        "notification_preference": item.get(
-                            "notification_preference", None
-                        ),
+                        "notification_preference": item.get("notification_preference", None),
                         "kind": self.env["g2p.group.kind"]
                         .search([("name", "=", item.get("kind", None))], limit=1)[0]
                         .id
@@ -342,20 +320,14 @@ class MisConfig(models.Model):
 
             for membership in item.get("members"):
                 individual = membership.get("individual")
-                if not any(
-                    ind.get("id") == individual.get("id") for ind in individuals_list
-                ):
+                if not any(ind.get("id") == individual.get("id") for ind in individuals_list):
                     individuals_list.append(individual)
 
         for member in individuals_list:
             create_date_str = member.get("create_date")
-            create_date = datetime.strptime(
-                create_date_str, "%Y-%m-%dT%H:%M:%S.%f%z"
-            ).replace(tzinfo=None)
+            create_date = datetime.strptime(create_date_str, "%Y-%m-%dT%H:%M:%S.%f%z").replace(tzinfo=None)
             write_date_str = member.get("write_date")
-            write_date = datetime.strptime(
-                write_date_str, "%Y-%m-%dT%H:%M:%S.%f%z"
-            ).replace(tzinfo=None)
+            write_date = datetime.strptime(write_date_str, "%Y-%m-%dT%H:%M:%S.%f%z").replace(tzinfo=None)
             if (not config.last_updated_at) or create_date > config.last_updated_at:
                 individual = self.env["res.partner"].create(
                     {
@@ -408,18 +380,14 @@ class MisConfig(models.Model):
                                 0,
                                 {
                                     "bank_id": self.env["res.bank"]
-                                    .search(
-                                        [("name", "=", bank.get("bank_name"))], limit=1
-                                    )[0]
+                                    .search([("name", "=", bank.get("bank_name"))], limit=1)[0]
                                     .id,
                                     "acc_number": bank.get("acc_number"),
                                 },
                             )
                             for bank in member.get("bank_ids")
                         ],
-                        "notification_preference": member.get(
-                            "notification_preference", None
-                        ),
+                        "notification_preference": member.get("notification_preference", None),
                         "given_name": member.get("given_name"),
                         "addl_name": member.get("addl_name"),
                         "family_name": member.get("family_name"),
@@ -502,18 +470,14 @@ class MisConfig(models.Model):
                                 0,
                                 {
                                     "bank_id": self.env["res.bank"]
-                                    .search(
-                                        [("name", "=", bank.get("bank_name"))], limit=1
-                                    )[0]
+                                    .search([("name", "=", bank.get("bank_name"))], limit=1)[0]
                                     .id,
                                     "acc_number": bank.get("acc_number"),
                                 },
                             )
                             for bank in member.get("bank_ids")
                         ],
-                        "notification_preference": member.get(
-                            "notification_preference", None
-                        ),
+                        "notification_preference": member.get("notification_preference", None),
                         "given_name": member.get("given_name"),
                         "addl_name": member.get("addl_name"),
                         "family_name": member.get("family_name"),
@@ -551,13 +515,11 @@ class MisConfig(models.Model):
                 )
 
                 create_date_str = membership.get("create_date")
-                create_date = datetime.strptime(
-                    create_date_str, "%Y-%m-%dT%H:%M:%S.%f%z"
-                ).replace(tzinfo=None)
+                create_date = datetime.strptime(create_date_str, "%Y-%m-%dT%H:%M:%S.%f%z").replace(
+                    tzinfo=None
+                )
                 write_date_str = membership.get("write_date")
-                write_date = datetime.strptime(
-                    write_date_str, "%Y-%m-%dT%H:%M:%S.%f%z"
-                ).replace(tzinfo=None)
+                write_date = datetime.strptime(write_date_str, "%Y-%m-%dT%H:%M:%S.%f%z").replace(tzinfo=None)
 
                 if (not config.last_updated_at) or create_date > config.last_updated_at:
                     group.update(
@@ -571,9 +533,7 @@ class MisConfig(models.Model):
                                         "kind": [
                                             (
                                                 4,
-                                                config.get_or_create_kind(
-                                                    member_kind.get("name")
-                                                ).id,
+                                                config.get_or_create_kind(member_kind.get("name")).id,
                                             )
                                             for member_kind in membership.get("kind")
                                         ],
@@ -584,9 +544,7 @@ class MisConfig(models.Model):
                     )
                     is_updated = True
                 elif write_date > config.last_updated_at:
-                    group_membership = group.group_membership_ids.filter(
-                        individual=individual.id
-                    )
+                    group_membership = group.group_membership_ids.filter(individual=individual.id)
                     group_membership.update(
                         {
                             "kind": [
@@ -595,9 +553,7 @@ class MisConfig(models.Model):
                             + [
                                 (
                                     4,
-                                    config.get_or_create_kind(
-                                        member_kind.get("name")
-                                    ).id,
+                                    config.get_or_create_kind(member_kind.get("name")).id,
                                 )
                                 for member_kind in membership.get("kind")
                             ]
@@ -610,15 +566,11 @@ class MisConfig(models.Model):
         config.logout()
 
     def get_or_create_kind(self, kind_str):
-        kind = self.env["g2p.group.membership.kind"].search(
-            [("name", "=", kind_str)], limit=1
-        )
+        kind = self.env["g2p.group.membership.kind"].search([("name", "=", kind_str)], limit=1)
         if kind:
             kind = kind[0]
         else:
-            kind = (
-                self.env["g2p.group.membership.kind"].sudo().create({"name": kind_str})
-            )
+            kind = self.env["g2p.group.membership.kind"].sudo().create({"name": kind_str})
 
         return kind
 
@@ -632,9 +584,7 @@ class MisConfig(models.Model):
                         "active": True,
                         "interval_number": rec.interval_minutes,
                         "interval_type": "minutes",
-                        "model_id": self.env["ir.model"]
-                        .search([("model", "=", "mis.config")])[0]
-                        .id,
+                        "model_id": self.env["ir.model"].search([("model", "=", "mis.config")])[0].id,
                         "state": "code",
                         "code": "model.import_records(" + str(rec.id) + ")",
                         "doall": False,
