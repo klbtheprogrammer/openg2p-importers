@@ -22,9 +22,7 @@ class OdkConfig(models.Model):
     project = fields.Char(required=False)
     form_id = fields.Char(string="Form ID", required=False)
     json_formatter = fields.Text(string="JSON Formatter", required=True)
-    target_registry = fields.Selection(
-        [("individual", "Individual"), ("group", "Group")], required=True
-    )
+    target_registry = fields.Selection([("individual", "Individual"), ("group", "Group")], required=True)
     last_sync_time = fields.Datetime(string="Last synced on", required=False)
     cron_id = fields.Many2one("ir.cron", string="Cron Job", required=False)
     job_status = fields.Selection(
@@ -51,9 +49,7 @@ class OdkConfig(models.Model):
                 try:
                     pyjq.compile(rec.json_formatter)
                 except ValueError as ve:
-                    raise ValidationError(
-                        _("Json Format is not valid pyjq expression.")
-                    ) from ve
+                    raise ValidationError(_("Json Format is not valid pyjq expression.")) from ve
 
     def test_connection(self):
 
@@ -148,9 +144,7 @@ class OdkConfig(models.Model):
                         "active": True,
                         "interval_number": rec.interval_hours,
                         "interval_type": "minutes",
-                        "model_id": self.env["ir.model"]
-                        .search([("model", "=", "odk.config")])
-                        .id,
+                        "model_id": self.env["ir.model"].search([("model", "=", "odk.config")]).id,
                         "state": "code",
                         "code": "model.import_records_by_id(" + str(rec.id) + ")",
                         "doall": False,
@@ -161,8 +155,7 @@ class OdkConfig(models.Model):
                 now_datetime = datetime.now()
                 rec.update(
                     {
-                        "start_datetime": now_datetime
-                        - timedelta(hours=rec.interval_hours),
+                        "start_datetime": now_datetime - timedelta(hours=rec.interval_hours),
                         "end_datetime": now_datetime,
                     }
                 )

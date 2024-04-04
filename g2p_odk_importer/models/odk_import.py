@@ -8,9 +8,7 @@ class OdkImport(models.Model):
     _description = "ODK Import"
 
     name = fields.Char(required=True)
-    odk_config_id = fields.Many2one(
-        comodel_name="odk.config", string="ODK Configuration", required=True
-    )
+    odk_config_id = fields.Many2one(comodel_name="odk.config", string="ODK Configuration", required=True)
 
     @api.model
     def run_import(self):
@@ -18,9 +16,7 @@ class OdkImport(models.Model):
         odk_configs = self.env["odk.config"].search([])
 
         for odk_config in odk_configs:
-            odk_client = ODKClient(
-                odk_config.base_url, odk_config.username, odk_config.password
-            )
+            odk_client = ODKClient(odk_config.base_url, odk_config.username, odk_config.password)
             odk_client.login()
 
             form_ids = odk_client.get_form_ids()

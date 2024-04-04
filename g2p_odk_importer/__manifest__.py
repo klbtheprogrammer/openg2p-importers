@@ -10,18 +10,13 @@
     "website": "https://github.com/OpenG2P/openg2p-auth",
     "license": "LGPL-3",
     "depends": [
-        "connector",
-        "base",
-        "web",
         "g2p_programs",
-        "component",
         "queue_job",
     ],
     "data": [
         "security/ir.model.access.csv",
         "views/odk_config_views.xml",
         "views/odk_menu.xml",
-        # "views/odk_import_views.xml",
     ],
     "external_dependencies": {
         "python": [
