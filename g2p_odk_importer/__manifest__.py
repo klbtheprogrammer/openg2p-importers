@@ -11,7 +11,6 @@
     "license": "LGPL-3",
     "depends": [
         "queue_job",
-        "g2p_programs",
     ],
     "data": [
         "security/ir.model.access.csv",
