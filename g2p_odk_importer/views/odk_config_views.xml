@@ -111,7 +111,7 @@
                         <field name="target_registry" />
                         <field name="json_formatter" />
                     </group>
-                     <group string="Time interval">
+                    <group string="Time interval">
                         <field name="interval_hours" />
                     </group>
                 </sheet>

@@ -114,38 +114,6 @@ class ODKClient:
                         for phone in mapped_json["phone_number_ids"]
                     ]
 
-                # program registrant info
-                # if (
-                #     self.target_registry == "individual"
-                #     and program_id
-                #     and "program_registrant_info_ids" in mapped_json
-                # ):
-                #     individual = self.get_individual_data(mapped_json)
-                #     mapped_json.update(individual)
-                #     prog_reg_info = mapped_json["program_registrant_info_ids"].get("data", None)
-                #     mapped_json["program_membership_ids"] = [
-                #         (
-                #             0,
-                #             0,
-                #             {
-                #                 "program_id": program_id.id,
-                #                 "state": "draft",
-                #                 "enrollment_date": date.today(),
-                #             },
-                #         )
-                #     ]
-                #     mapped_json["program_registrant_info_ids"] = [
-                #         (
-                #             0,
-                #             0,
-                #             {
-                #                 "program_id": program_id.id,
-                #                 "state": "active",
-                #                 "program_registrant_info": prog_reg_info if prog_reg_info else None,
-                #             },
-                #         )
-                #     ]
-
                 # Membership one2many
                 if "group_membership_ids" in mapped_json and self.target_registry == "group":
                     individual_ids = []
