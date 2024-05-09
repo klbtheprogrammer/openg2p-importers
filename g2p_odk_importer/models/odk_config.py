@@ -93,10 +93,11 @@ class OdkConfig(models.Model):
                 last_sync_timestamp=config.last_sync_time,
                 program_id=config.odk_program_id,
             )
-            config.update({"last_sync_time": fields.Datetime.now()})
+
             if "form_updated" in imported:
                 message = "ODK form records were imported successfully."
                 types = "success"
+                config.update({"last_sync_time": fields.Datetime.now()})
             elif "form_failed" in imported:
                 message = "ODK form import failed"
                 types = "danger"
@@ -129,7 +130,6 @@ class OdkConfig(models.Model):
         client.import_delta_records(
             last_sync_timestamp=config.last_sync_time, program_id=config.odk_program_id
         )
-        config.update({"last_sync_time": fields.Datetime.now()})
 
     def odk_import_action_trigger(self):
         for rec in self:
