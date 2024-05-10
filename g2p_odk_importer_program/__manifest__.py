@@ -3,13 +3,13 @@
 {
     "name": "G2P ODK Importer: Program",
     "category": "Connector",
-    "summary": "Import records from ODK",
+    "summary": "Import records from ODK and add then into Program",
     "version": "17.0.1.2.0",
     "sequence": 3,
     "author": "OpenG2P",
     "website": "https://openg2p.org",
     "license": "LGPL-3",
-    "depends": ["g2p_odk_importer_registry", "g2p_programs"],
+    "depends": ["g2p_odk_importer", "g2p_program_registrant_info"],
     "data": [
         "views/odk_config_views.xml",
     ],

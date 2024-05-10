@@ -79,6 +79,7 @@ class OdkConfig(models.Model):
         for config in self:
             client = ODKClient(
                 self.env,
+                config.id,
                 config.base_url,
                 config.username,
                 config.password,
@@ -89,16 +90,17 @@ class OdkConfig(models.Model):
             )
             client.login()
             imported = client.import_delta_records(last_sync_timestamp=config.last_sync_time)
-            config.update({"last_sync_time": fields.Datetime.now()})
             if "form_updated" in imported:
                 message = "ODK form records were imported successfully."
                 types = "success"
+                config.update({"last_sync_time": fields.Datetime.now()})
             elif "form_failed" in imported:
                 message = "ODK form import failed"
                 types = "danger"
             else:
                 message = "No new form records were submitted."
                 types = "warning"
+                config.update({"last_sync_time": fields.Datetime.now()})
             return {
                 "type": "ir.actions.client",
                 "tag": "display_notification",
@@ -113,6 +115,7 @@ class OdkConfig(models.Model):
         config = self.env["odk.config"].browse(_id)
         client = ODKClient(
             self.env,
+            config.id,
             config.base_url,
             config.username,
             config.password,
