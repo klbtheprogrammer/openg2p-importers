@@ -1,28 +1,19 @@
 # Part of openG2P. See LICENSE file for full copyright and licensing details.
 
 {
-    "name": "G2P ODK Importer",
+    "name": "G2P ODK Importer: Program",
     "category": "Connector",
-    "summary": "Import records from ODK",
+    "summary": "Import records from ODK and add then into Program",
     "version": "17.0.1.2.0",
     "sequence": 3,
     "author": "OpenG2P",
     "website": "https://openg2p.org",
     "license": "LGPL-3",
-    "depends": [
-        "queue_job",
-    ],
+    "depends": ["g2p_odk_importer", "g2p_program_registrant_info"],
     "data": [
-        "security/ir.model.access.csv",
         "views/odk_config_views.xml",
-        "views/odk_menu.xml",
-        "data/odk_cron.xml",
     ],
-    "external_dependencies": {
-        "python": [
-            "pyjq",
-        ]
-    },
+    "external_dependencies": {},
     "application": True,
     "installable": True,
     "auto_install": False,

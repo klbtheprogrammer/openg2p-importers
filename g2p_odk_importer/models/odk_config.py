@@ -40,7 +40,6 @@ class OdkConfig(models.Model):
     interval_hours = fields.Integer(string="Interval in hours", required=False)
     start_datetime = fields.Datetime(string="Start Time", required=False)
     end_datetime = fields.Datetime(string="End Time", required=False)
-    odk_program_id = fields.Many2one("g2p.program", string="ODK Program ID")
 
     @api.constrains("json_formatter")
     def constraint_json_fields(self):
@@ -80,6 +79,7 @@ class OdkConfig(models.Model):
         for config in self:
             client = ODKClient(
                 self.env,
+                config.id,
                 config.base_url,
                 config.username,
                 config.password,
@@ -89,11 +89,7 @@ class OdkConfig(models.Model):
                 config.json_formatter,
             )
             client.login()
-            imported = client.import_delta_records(
-                last_sync_timestamp=config.last_sync_time,
-                program_id=config.odk_program_id,
-            )
-
+            imported = client.import_delta_records(last_sync_timestamp=config.last_sync_time)
             if "form_updated" in imported:
                 message = "ODK form records were imported successfully."
                 types = "success"
@@ -104,6 +100,7 @@ class OdkConfig(models.Model):
             else:
                 message = "No new form records were submitted."
                 types = "warning"
+                config.update({"last_sync_time": fields.Datetime.now()})
             return {
                 "type": "ir.actions.client",
                 "tag": "display_notification",
@@ -118,6 +115,7 @@ class OdkConfig(models.Model):
         config = self.env["odk.config"].browse(_id)
         client = ODKClient(
             self.env,
+            config.id,
             config.base_url,
             config.username,
             config.password,
@@ -127,9 +125,8 @@ class OdkConfig(models.Model):
             config.json_formatter,
         )
         client.login()
-        client.import_delta_records(
-            last_sync_timestamp=config.last_sync_time, program_id=config.odk_program_id
-        )
+        client.import_delta_records(last_sync_timestamp=config.last_sync_time)
+        config.update({"last_sync_time": fields.Datetime.now()})
 
     def odk_import_action_trigger(self):
         for rec in self:

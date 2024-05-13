@@ -101,6 +101,7 @@
                         <field name="username" />
                         <field name="password" password="True" />
                         <field name="job_status" invisible="True" />
+                        <field name="last_sync_time" />
                     </group>
                     <group string="Project details">
                         <field name="project" />
@@ -110,11 +111,8 @@
                         <field name="target_registry" />
                         <field name="json_formatter" />
                     </group>
-                     <group string="Time interval">
+                    <group string="Time interval">
                         <field name="interval_hours" />
-                    </group>
-                    <group string="Program details">
-                        <field name="odk_program_id" />
                     </group>
                 </sheet>
             </form>

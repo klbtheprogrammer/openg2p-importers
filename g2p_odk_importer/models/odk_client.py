@@ -1,6 +1,5 @@
 import json
 import logging
-from datetime import date
 
 import pyjq
 import requests
@@ -15,6 +14,7 @@ class ODKClient:
     def __init__(
         self,
         env,
+        _id,
         base_url,
         username,
         password,
@@ -23,6 +23,7 @@ class ODKClient:
         target_registry,
         json_formatter=".",
     ):
+        self.id = _id
         self.base_url = base_url.rstrip("/")
         self.username = username
         self.password = password
@@ -65,7 +66,6 @@ class ODKClient:
     def import_delta_records(
         self,
         last_sync_timestamp=None,
-        program_id=None,
         skip=0,
         top=100,
     ):
@@ -116,54 +116,17 @@ class ODKClient:
                         for phone in mapped_json["phone_number_ids"]
                     ]
 
-                # program registrant info
-                if (
-                    self.target_registry == "individual"
-                    and program_id
-                    and "program_registrant_info_ids" in mapped_json
-                ):
-                    individual = self.get_individual_data(mapped_json)
-                    mapped_json.update(individual)
-                    prog_reg_info = mapped_json["program_registrant_info_ids"].get("data", None)
-                    mapped_json["program_membership_ids"] = [
-                        (
-                            0,
-                            0,
-                            {
-                                "program_id": program_id.id,
-                                "state": "draft",
-                                "enrollment_date": date.today(),
-                            },
-                        )
-                    ]
-                    mapped_json["program_registrant_info_ids"] = [
-                        (
-                            0,
-                            0,
-                            {
-                                "program_id": program_id.id,
-                                "state": "active",
-                                "program_registrant_info": prog_reg_info if prog_reg_info else None,
-                            },
-                        )
-                    ]
-
                 # Membership one2many
                 if "group_membership_ids" in mapped_json and self.target_registry == "group":
                     individual_ids = []
-                    head_added = False
                     for individual_mem in mapped_json.get("group_membership_ids"):
-                        # Create individual partner
-
                         individual_data = self.get_individual_data(individual_mem)
                         individual = self.env["res.partner"].sudo().create(individual_data)
                         if individual:
-                            kind = None
-                            if individual_mem.get("relationship_with_household_head") == 1 and not head_added:
-                                kind = self.get_or_create_kind("Head")
-                                head_added = True
+                            kind = self.get_member_kind(individual_mem)
 
                             individual_data = {"individual": individual.id}
+
                             if kind:
                                 individual_data["kind"] = [(4, kind.id)]
 
@@ -190,8 +153,10 @@ class ODKClient:
                         for reg_id in mapped_json["reg_ids"]
                     ]
 
+                updated_mapped_json = self.get_addl_data(mapped_json)
+
                 # update value into the res_partner table
-                self.env["res.partner"].sudo().create(mapped_json)
+                self.env["res.partner"].sudo().create(updated_mapped_json)
                 data.update({"form_updated": True})
             except AttributeError as ex:
                 data.update({"form_failed": True})
@@ -202,12 +167,9 @@ class ODKClient:
 
         return data
 
-    def get_or_create_kind(self, kind_str):
-        kind = self.env["g2p.group.membership.kind"].search([("name", "=", kind_str)], limit=1)
-        if kind:
-            return kind
-        else:
-            return self.env["g2p.group.membership.kind"].sudo().create({"name": kind_str})
+    def get_member_kind(self, record):
+        kind = None
+        return kind
 
     def get_gender(self, gender_val):
         if gender_val:
@@ -225,7 +187,7 @@ class ODKClient:
         family_name = name.split(" ")[-1]
         dob = record.get("birthdate", None)
         addl_name = " ".join(name.split(" ")[1:-1])
-        gender = self.get_gender(record.get("sex", None) or record.get("gender", None))
+        gender = self.get_gender(record.get("gender"))
 
         vals = {
             "name": name,
@@ -239,3 +201,8 @@ class ODKClient:
         }
 
         return vals
+
+    def get_addl_data(self, mapped_json):
+        # Override this method to add more data
+
+        return mapped_json
