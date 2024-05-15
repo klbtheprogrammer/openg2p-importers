@@ -1,1 +1,1 @@
-OpenG2P ODK IMPORTER PROGRAM MODULE
+OpenG2P ODK Program Importer

@@ -16,13 +16,13 @@ G2P ODK Importer
 .. |badge2| image:: https://img.shields.io/badge/licence-LGPL--3-blue.png
     :target: http://www.gnu.org/licenses/lgpl-3.0-standalone.html
     :alt: License: LGPL-3
-.. |badge3| image:: https://img.shields.io/badge/github-OpenG2P%2Fopeng2p--importers-lightgray.png?logo=github
-    :target: https://github.com/OpenG2P/openg2p-importers/tree/17.0-develop/g2p_odk_importer
-    :alt: OpenG2P/openg2p-importers
+.. |badge3| image:: https://img.shields.io/badge/github-OpenG2P%2Fopeng2p--importer-lightgray.png?logo=github
+    :target: https://github.com/OpenG2P/openg2p-importer/tree/17.0-develop/g2p_odk_importer
+    :alt: OpenG2P/openg2p-importer
 
 |badge1| |badge2| |badge3|
 
-OpenG2P ODK IMPORTER MODULE
+OpenG2P ODK Importer
 
 **Table of contents**
 
@@ -32,10 +32,10 @@ OpenG2P ODK IMPORTER MODULE
 Bug Tracker
 ===========
 
-Bugs are tracked on `GitHub Issues <https://github.com/OpenG2P/openg2p-importers/issues>`_.
+Bugs are tracked on `GitHub Issues <https://github.com/OpenG2P/openg2p-importer/issues>`_.
 In case of trouble, please check there if your issue has already been reported.
 If you spotted it first, help us to smash it by providing a detailed and welcomed
-`feedback <https://github.com/OpenG2P/openg2p-importers/issues/new?body=module:%20g2p_odk_importer%0Aversion:%2017.0-develop%0A%0A**Steps%20to%20reproduce**%0A-%20...%0A%0A**Current%20behavior**%0A%0A**Expected%20behavior**>`_.
+`feedback <https://github.com/OpenG2P/openg2p-importer/issues/new?body=module:%20g2p_odk_importer%0Aversion:%2017.0-develop%0A%0A**Steps%20to%20reproduce**%0A-%20...%0A%0A**Current%20behavior**%0A%0A**Expected%20behavior**>`_.
 
 Do not contact contributors directly about support or help with technical issues.
 
@@ -50,6 +50,6 @@ Authors
 Maintainers
 ~~~~~~~~~~~
 
-This module is part of the `OpenG2P/openg2p-importers <https://github.com/OpenG2P/openg2p-importers/tree/17.0-develop/g2p_odk_importer>`_ project on GitHub.
+This module is part of the `OpenG2P/openg2p-importer <https://github.com/OpenG2P/openg2p-importer/tree/17.0-develop/g2p_odk_importer>`_ project on GitHub.
 
 You are welcome to contribute.

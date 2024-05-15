@@ -22,7 +22,7 @@ G2P ODK Importer: Program
 
 |badge1| |badge2| |badge3|
 
-OpenG2P ODK IMPORTER PROGRAM MODULE
+OpenG2P ODK Program Importer
 
 **Table of contents**
 
