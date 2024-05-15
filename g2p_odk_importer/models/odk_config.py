@@ -54,6 +54,7 @@ class OdkConfig(models.Model):
         for config in self:
             client = ODKClient(
                 self.env,
+                config.id,
                 config.base_url,
                 config.username,
                 config.password,
