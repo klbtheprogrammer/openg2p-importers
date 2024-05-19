@@ -1,5 +1,6 @@
 import json
 import logging
+from datetime import datetime
 
 import pyjq
 import requests
@@ -119,19 +120,25 @@ class ODKClient:
                 # Membership one2many
                 if "group_membership_ids" in mapped_json and self.target_registry == "group":
                     individual_ids = []
+                    relationships_ids = []
                     for individual_mem in mapped_json.get("group_membership_ids"):
                         individual_data = self.get_individual_data(individual_mem)
                         individual = self.env["res.partner"].sudo().create(individual_data)
                         if individual:
                             kind = self.get_member_kind(individual_mem)
-
                             individual_data = {"individual": individual.id}
 
                             if kind:
                                 individual_data["kind"] = [(4, kind.id)]
 
+                            relationship = self.get_member_relationship(individual.id, individual_mem)
+
+                            if relationship:
+                                relationships_ids.append((0, 0, relationship))
+
                             individual_ids.append((0, 0, individual_data))
 
+                    mapped_json["related_1_ids"] = relationships_ids
                     mapped_json["group_membership_ids"] = individual_ids
 
                 # Reg_ids one2many
@@ -171,6 +178,11 @@ class ODKClient:
         kind = None
         return kind
 
+    def get_member_relationship(self, source_id, record):
+        # TODO: Add Member Relationship code
+        relationship = None
+        return relationship
+
     def get_gender(self, gender_val):
         if gender_val:
             gender = self.env["gender.type"].sudo().search([("code", "=", gender_val)], limit=1)
@@ -181,11 +193,22 @@ class ODKClient:
         else:
             return None
 
+    def get_dob(self, record):
+        dob = record.get("birthdate", None)
+        if dob:
+            return dob
+
+        age = record.get("age", None)
+        if age:
+            now = datetime.now()
+            birth_year = now.year - age
+            return now.replace(year=birth_year).strftime("%Y-%m-%d")
+
     def get_individual_data(self, record):
         name = record.get("name", None)
         given_name = name.split(" ")[0]
         family_name = name.split(" ")[-1]
-        dob = record.get("birthdate", None)
+        dob = self.get_dob(record)
         addl_name = " ".join(name.split(" ")[1:-1])
         gender = self.get_gender(record.get("gender"))
 
