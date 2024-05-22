@@ -101,6 +101,57 @@ class ODKClient:
                 elif self.target_registry == "group":
                     mapped_json.update({"is_registrant": True, "is_group": True})
 
+                #priority_needs Many2many
+                
+                if "priority_needs_ids" in mapped_json:
+                    priority_needs_names = mapped_json.get("priority_needs_ids").split()
+                    pneeds = []
+
+                    for name in priority_needs_names:
+                        priority_need = self.env['g2p.priority_needs'].search([('code', '=', name)], limit=1)
+                        if priority_need:
+                            pneeds.append((4, priority_need.id))
+
+                    mapped_json["priority_needs_ids"] = pneeds
+
+                # #support_in_displacement_situation_ids Many2many
+                
+                if "support_in_displacement_situation_ids" in mapped_json:
+                    support_in_displacement = mapped_json.get("support_in_displacement_situation_ids").split()
+                    support = []
+
+                    for name in support_in_displacement:
+                        support_displacement = self.env['g2p.support_displacement_situation'].search([('code', '=', name)], limit=1)
+                        if support_displacement:
+                            support.append((4, support_displacement.id))
+
+                    mapped_json["support_in_displacement_situation_ids"] = support
+
+                # #prevents_financial_provider_access_ids Many2many
+                
+                if "prevents_financial_provider_access_ids" in mapped_json and mapped_json["prevents_financial_provider_access_ids"] != None:
+                    prevents_financial_provider = mapped_json.get("prevents_financial_provider_access_ids").split()
+                    fin= []
+
+                    for name in prevents_financial_provider:
+                        financial_access = self.env['g2p.prevents_financial_provider_access'].search([('code', '=', name)], limit=1)
+                        if financial_access:
+                            fin.append((4, financial_access.id))
+
+                    mapped_json["prevents_financial_provider_access_ids"] = fin
+
+                #Many2one fileds for regions, zone, & woreda
+                region_id, zone_id, woreda_id, origin_region_id, origin_zone_id, origin_woreda_id = self.get_admin_records(mapped_json)
+                mapped_json.update({
+                    "region": region_id,
+                    "zone": zone_id,
+                    "woreda": woreda_id,
+                    "origin_region": origin_region_id,
+                    "origin_zone": origin_zone_id,
+                    "origin_woreda": origin_woreda_id,
+                })
+
+
                 # TODO: Handle many one2many based on requirements
                 # phone one2many
                 if "phone_number_ids" in mapped_json:
@@ -229,3 +280,21 @@ class ODKClient:
         # Override this method to add more data
 
         return mapped_json
+    
+    def get_admin_records(self, record):
+        region_name = record.get("region")
+        zone_name = record.get("zone")
+        woreda_name = record.get("woreda")
+        origin_region_name = record.get("origin_region"),
+        origin_zone_name = record.get("origin_zone"),
+        origin_woreda_name = record.get("origin_woreda"),
+
+        region_id = self.env['g2p.region'].search([('code', '=', region_name)], limit=1).id
+        zone_id = self.env['g2p.zone'].search([('code', '=', zone_name)], limit=1).id
+        woreda_id = self.env['g2p.woreda'].search([('code', '=', woreda_name)], limit=1).id
+        origin_region_id = self.env['g2p.region'].search([('code', '=', origin_region_name)], limit=1).id
+        origin_zone_id = self.env['g2p.zone'].search([('code', '=', origin_zone_name)], limit=1).id
+        origin_woreda_id = self.env['g2p.woreda'].search([('code', '=', origin_woreda_name)], limit=1).id
+
+
+        return region_id, zone_id, woreda_id, origin_region_id, origin_zone_id, origin_woreda_id
